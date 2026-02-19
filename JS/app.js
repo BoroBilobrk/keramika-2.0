@@ -1,0 +1,434 @@
+// JS/app.js
+console.log("APP.JS LOADED ✅");
+
+// Autentikacija
+import { isLoggedIn, login, register, logout, getCurrentUser } from "./auth/auth.js";
+
+// Profil
+import { initProfileView, saveProfileFromForm, saveLogo, loadLogo, updateHeaderBrand } from "./profile/profile.js";
+
+// UI (view switching)
+import { showView } from "./core/ui.js";
+
+// EVENTS (gumbi, pdf, cloud, otvori, dodatne mjere)
+import "./core/events.js";
+
+// kalkulacije
+import { calculateAuto } from "./calculations/autoCalc.js";
+
+// cjenik (lokalno spremanje)
+import { applyPricesObject, pricesToPlainObject, savePrices } from "./calculations/cjenik.js";
+
+// Excel troškovnik
+import { loadTroskovnikExcel } from "./troskovnik/loadExcel.js";
+import { calcFromTroskovnik } from "./troskovnik/calc.js";
+
+// ==========================
+// PRICES STORAGE KEY (po korisniku)
+// ==========================
+function getPricesKey() {
+  const user = getCurrentUser();
+  return user ? `keramika_prices_${user}` : 'keramika_prices';
+}
+
+const TILE_FORMAT_OPTIONS = [
+  { value: "", label: "-- odaberi --" },
+  { value: "30x60", label: "30 × 60 cm" },
+  { value: "60x60", label: "60 × 60 cm" },
+  { value: "90x90", label: "90 × 90 cm" },
+  { value: "120x120", label: "120 × 120 cm" },
+  { value: "60x120", label: "60 × 120 cm" },
+  { value: "100x300", label: "100 × 300 cm" },
+  { value: "custom", label: "Prilagođeno" }
+];
+
+function buildFormatSelect(selectedValue = "") {
+  const select = document.createElement("select");
+  select.className = "troskovnik-format-select";
+
+  TILE_FORMAT_OPTIONS.forEach(optionData => {
+    const option = document.createElement("option");
+    option.value = optionData.value;
+    option.textContent = optionData.label;
+    if (optionData.value === selectedValue) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+
+  return select;
+}
+
+function mountSharedCalcFields(targetId) {
+  const shared = document.getElementById("sharedCalcFields");
+  const mount = document.getElementById(targetId);
+
+  if (!shared || !mount) return;
+
+  mount.appendChild(shared);
+  shared.style.display = "block";
+}
+
+function initSharedCalcFieldsMounts() {
+  mountSharedCalcFields("sharedCalcFieldsMount");
+
+  document.getElementById("btnOpenAutoCalc")?.addEventListener("click", () => {
+    mountSharedCalcFields("sharedCalcFieldsMount");
+  });
+
+  document.getElementById("btnOpenTroskovnikCalc")?.addEventListener("click", () => {
+    mountSharedCalcFields("troskovnikCalcFieldsMount");
+  });
+}
+
+function loadPricesFromStorage() {
+  try {
+    const raw = localStorage.getItem(getPricesKey());
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    applyPricesObject(obj);
+  } catch (e) {
+    console.warn("Ne mogu učitati lokalni cjenik", e);
+  }
+}
+
+function savePricesToStorage() {
+  try {
+    savePrices();
+    const obj = pricesToPlainObject();
+    localStorage.setItem(getPricesKey(), JSON.stringify(obj));
+    alert("Cjenik spremljen lokalno.");
+  } catch (e) {
+    console.error(e);
+    alert("Greška pri spremanju cjenika.");
+  }
+}
+
+function initPriceFormatSelect() {
+  const priceFormatSelect = document.getElementById("priceFormatSelect");
+  if (!priceFormatSelect) return;
+
+  let lastFormat = priceFormatSelect.value || "custom";
+  if (!priceFormatSelect.value) {
+    priceFormatSelect.value = lastFormat;
+  }
+
+  priceFormatSelect.addEventListener("change", () => {
+    const currentFormat = priceFormatSelect.value || "custom";
+    priceFormatSelect.value = lastFormat;
+    savePrices();
+
+    priceFormatSelect.value = currentFormat;
+    applyPricesObject(pricesToPlainObject());
+    lastFormat = currentFormat;
+  });
+}
+
+// ==========================
+// AUTH INIT
+// ==========================
+function initAuth() {
+  if (isLoggedIn()) {
+    // Korisnik je prijavljen – prikaži home
+    showView("homeView");
+    updateHeaderBrand();
+    updateUserInfo();
+    loadPricesFromStorage();
+    initSharedCalcFieldsMounts();
+    initPriceFormatSelect();
+  } else {
+    // Korisnik nije prijavljen – prikaži login
+    showView("loginView");
+  }
+}
+
+function updateUserInfo() {
+  const user = getCurrentUser();
+  const userInfoEl = document.getElementById("userInfo");
+  if (userInfoEl) userInfoEl.textContent = user || '';
+  // Prikaži/sakrij header gumbe
+  const btnLogout = document.getElementById("btnLogout");
+  const btnSettings = document.getElementById("btnOpenSettings");
+  if (btnLogout) btnLogout.style.display = user ? '' : 'none';
+  if (btnSettings) btnSettings.style.display = user ? '' : 'none';
+}
+
+// ==========================
+// LOGIN FORM
+// ==========================
+document.getElementById("btnLogin")?.addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail")?.value?.trim();
+  const password = document.getElementById("loginPassword")?.value;
+
+  try {
+    await login(email, password);
+    updateHeaderBrand();
+    updateUserInfo();
+    loadPricesFromStorage();
+    initSharedCalcFieldsMounts();
+    initPriceFormatSelect();
+    showView("homeView");
+  } catch (e) {
+    alert("Greška prijave: " + e.message);
+  }
+});
+
+// ==========================
+// REGISTER FORM
+// ==========================
+document.getElementById("btnRegister")?.addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail")?.value?.trim();
+  const password = document.getElementById("loginPassword")?.value;
+
+  try {
+    await register(email, password);
+    updateHeaderBrand();
+    updateUserInfo();
+    loadPricesFromStorage();
+    initSharedCalcFieldsMounts();
+    initPriceFormatSelect();
+    showView("homeView");
+  } catch (e) {
+    alert("Greška registracije: " + e.message);
+  }
+});
+
+// ==========================
+// LOGOUT
+// ==========================
+document.getElementById("btnLogout")?.addEventListener("click", () => {
+  if (!confirm("Odjaviti se?")) return;
+  logout();
+  showView("loginView");
+  const userInfoEl = document.getElementById("userInfo");
+  if (userInfoEl) userInfoEl.textContent = '';
+  const brandEl = document.getElementById("headerBrand");
+  if (brandEl) brandEl.textContent = 'Keramika 2.0';
+  const btnLogout = document.getElementById("btnLogout");
+  const btnSettings = document.getElementById("btnOpenSettings");
+  if (btnLogout) btnLogout.style.display = 'none';
+  if (btnSettings) btnSettings.style.display = 'none';
+});
+
+// ==========================
+// SETTINGS / PROFIL
+// ==========================
+document.getElementById("btnOpenSettings")?.addEventListener("click", () => {
+  initProfileView();
+  showView("settingsView");
+});
+
+document.getElementById("btnSaveProfile")?.addEventListener("click", () => {
+  saveProfileFromForm();
+  updateHeaderBrand();
+});
+
+// Upload loga
+document.getElementById("logoUpload")?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const dataUrl = ev.target.result;
+    saveLogo(dataUrl);
+
+    const preview = document.getElementById("logoPreview");
+    if (preview) {
+      preview.src = dataUrl;
+      preview.style.display = "block";
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+// Brisanje loga
+document.getElementById("btnRemoveLogo")?.addEventListener("click", () => {
+  saveLogo(null);
+  const preview = document.getElementById("logoPreview");
+  if (preview) {
+    preview.src = "";
+    preview.style.display = "none";
+  }
+  const input = document.getElementById("logoUpload");
+  if (input) input.value = "";
+});
+
+// ==========================
+// HELPER ZA LIJEP PRIKAZ REZULTATA
+// ==========================
+function renderNiceResult(data) {
+  if (!data || !data.results) return "Nema podataka.";
+
+  const r = data.results;
+  const rows = [];
+
+  const addRow = (label, value, unit) => {
+    const v = Number(value || 0);
+    if (!v) return; // preskoči nule
+    rows.push(
+      `<tr><td>${label}</td><td>${v.toFixed(2)}</td><td>${unit}</td></tr>`
+    );
+  };
+
+  addRow("Pod",           r.pod,          "m²");
+  addRow("Zidovi",        r.zidovi,       "m²");
+  addRow("Hidro pod",     r.hidroPod,     "m²");
+  addRow("Hidro tuš",     r.hidroTus,     "m²");
+  addRow("Hidro ukupno",  r.hidroUkupno,  "m²");
+  addRow("Hidro traka",   r.hidroTraka,   "m");
+  addRow("Silikon",       r.silikon,      "m");
+  addRow("Sokl",          r.sokl,         "m");
+  addRow("Lajsne",        r.lajsne,       "m");
+  addRow("Gerung",        r.gerung,       "m");
+  addRow("Stepenice",     r.stepenice,    "m");
+
+  if (!rows.length) return "Sve vrijednosti su 0.";
+
+  const dims = data.dims || {};
+  const dimInfo =
+    dims.D || dims.S || dims.V
+      ? `<p class="hint">Dimenzije: D = ${dims.D || 0} m, Š = ${dims.S || 0} m, V = ${dims.V || 0} m</p>`
+      : "";
+
+  return `
+    ${dimInfo}
+    <table class="table"> 
+      <thead>
+        <tr>
+          <th>Stavka</th>
+          <th>Količina</th>
+          <th>Jedinica</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+// ==========================
+// AUTOMATSKI OBRAČUN
+// ==========================
+document.getElementById("btnCalcNow")?.addEventListener("click", () => {
+  const data = calculateAuto();
+
+  const resultCard = document.getElementById("calcResult");
+  const resultBox = document.getElementById("calcOutput");
+
+  if (!resultCard || !resultBox) {
+    console.warn("Calc result elements not found");
+    return;
+  }
+
+  resultCard.style.display = "block";
+  resultBox.innerHTML = renderNiceResult(data);
+});
+
+// ==========================
+// SPREMI CJENIK
+// ==========================
+document.getElementById("btnSavePrices")?.addEventListener("click", () => {
+  savePricesToStorage();
+});
+
+// ==========================
+// UČITAVANJE EXCEL TROŠKOVNIKA
+// ==========================
+document.getElementById("btnLoadTroskovnik")?.addEventListener("click", async () => {
+  const fileInput = document.getElementById("troskovnikFile");
+  const file = fileInput && fileInput.files && fileInput.files[0];
+
+  if (!file) {
+    alert("Odaberi Excel (.xlsx) datoteku");
+    return;
+  }
+
+  try {
+    await loadTroskovnikExcel(file);
+    renderTroskovnikChecklist();
+    alert("Excel troškovnik učitan ✔");
+  } catch (e) {
+    console.error(e);
+    alert("Greška pri učitavanju Excel troškovnika");
+  }
+});
+
+// ==========================
+// OBRAČUN PO TROŠKOVNIKU
+// ==========================
+document.getElementById("btnCalcFromTroskovnik")?.addEventListener("click", () => {
+  if (!window.troskovnikItems || !window.troskovnikItems.length) {
+    alert("Nema učitanih stavki");
+    return;
+  }
+  calcFromTroskovnik();
+});
+
+// ==========================
+// CHECKLIST TROŠKOVNIKA
+// ==========================
+function renderTroskovnikChecklist() {
+  const box = document.getElementById("troskovnikItemsList");
+  if (!box || !window.troskovnikItems) return;
+
+  box.innerHTML = "";
+
+  window.troskovnikItems.forEach(i => {
+    const row = document.createElement("div");
+    row.className = "troskovnik-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = String(i.id ?? "");
+    checkbox.checked = true;
+
+    const opisDiv = document.createElement("div");
+    opisDiv.className = "opis";
+    opisDiv.textContent = i.opis || "";
+
+    const jmDiv = document.createElement("div");
+    jmDiv.className = "jm";
+    jmDiv.textContent = `(${i.jm || ""})`;
+
+    const formatDiv = document.createElement("div");
+    formatDiv.className = "format";
+
+    const formatValue = i.format || "custom";
+    const formatSelect = buildFormatSelect(formatValue);
+    formatSelect.dataset.itemId = String(i.id ?? "");
+    formatSelect.addEventListener("change", () => {
+      i.format = formatSelect.value;
+    });
+
+    formatDiv.appendChild(formatSelect);
+
+    row.appendChild(checkbox);
+    row.appendChild(opisDiv);
+    row.appendChild(jmDiv);
+    row.appendChild(formatDiv);
+
+    box.appendChild(row);
+  });
+}
+
+// Eksponiranje za troskovnik load listener
+window.renderTroskovnikChecklist = renderTroskovnikChecklist;
+
+// ==========================
+// TILE FORMAT CUSTOM TOGGLE
+// ==========================
+const tileFormatSelect = document.getElementById("tileFormatSelect");
+const tileCustomFields = document.getElementById("tileCustomFields");
+
+tileFormatSelect?.addEventListener("change", () => {
+  if (tileCustomFields) {
+    tileCustomFields.style.display = tileFormatSelect.value === "custom" ? "block" : "none";
+  }
+});
+
+// ==========================
+// POKRETANJE
+// ==========================
+initAuth();
