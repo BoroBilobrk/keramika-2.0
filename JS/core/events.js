@@ -90,7 +90,8 @@ $("btnAddDm")?.addEventListener("click", () => {
 
   box.innerHTML = `
     <input class="dmName" placeholder="Naziv mjere">
-    <input class="dmVal" placeholder="0,00">
+    <input class="dmD" placeholder="D (m)">
+    <input class="dmS" placeholder="Š (m)">
     <select class="dmSign">
       <option value="+">+</option>
       <option value="-">-</option>

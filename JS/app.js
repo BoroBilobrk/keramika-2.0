@@ -33,12 +33,45 @@ function getPricesKey() {
 
 const TILE_FORMAT_OPTIONS = [
   { value: "", label: "-- odaberi --" },
-  { value: "30x60", label: "30 × 60 cm" },
+  { value: "10x10", label: "10 × 10 cm" },
+  { value: "15x15", label: "15 × 15 cm" },
+  { value: "20x20", label: "20 × 20 cm" },
+  { value: "25x25", label: "25 × 25 cm" },
+  { value: "30x30", label: "30 × 30 cm" },
+  { value: "33x33", label: "33 × 33 cm" },
+  { value: "40x40", label: "40 × 40 cm" },
+  { value: "45x45", label: "45 × 45 cm" },
+  { value: "50x50", label: "50 × 50 cm" },
   { value: "60x60", label: "60 × 60 cm" },
+  { value: "75x75", label: "75 × 75 cm" },
+  { value: "80x80", label: "80 × 80 cm" },
   { value: "90x90", label: "90 × 90 cm" },
+  { value: "100x100", label: "100 × 100 cm" },
   { value: "120x120", label: "120 × 120 cm" },
+  { value: "10x20", label: "10 × 20 cm" },
+  { value: "10x30", label: "10 × 30 cm" },
+  { value: "15x30", label: "15 × 30 cm" },
+  { value: "20x40", label: "20 × 40 cm" },
+  { value: "20x50", label: "20 × 50 cm" },
+  { value: "20x60", label: "20 × 60 cm" },
+  { value: "25x50", label: "25 × 50 cm" },
+  { value: "30x60", label: "30 × 60 cm" },
+  { value: "30x90", label: "30 × 90 cm" },
+  { value: "33x60", label: "33 × 60 cm" },
+  { value: "40x60", label: "40 × 60 cm" },
+  { value: "40x80", label: "40 × 80 cm" },
+  { value: "45x90", label: "45 × 90 cm" },
+  { value: "50x100", label: "50 × 100 cm" },
   { value: "60x120", label: "60 × 120 cm" },
+  { value: "60x180", label: "60 × 180 cm" },
+  { value: "75x150", label: "75 × 150 cm" },
+  { value: "80x160", label: "80 × 160 cm" },
+  { value: "80x240", label: "80 × 240 cm" },
   { value: "100x300", label: "100 × 300 cm" },
+  { value: "120x240", label: "120 × 240 cm" },
+  { value: "120x260", label: "120 × 260 cm" },
+  { value: "120x278", label: "120 × 278 cm" },
+  { value: "160x320", label: "160 × 320 cm" },
   { value: "custom", label: "Prilagođeno" }
 ];
 
@@ -415,18 +448,6 @@ function renderTroskovnikChecklist() {
 
 // Eksponiranje za troskovnik load listener
 window.renderTroskovnikChecklist = renderTroskovnikChecklist;
-
-// ==========================
-// TILE FORMAT CUSTOM TOGGLE
-// ==========================
-const tileFormatSelect = document.getElementById("tileFormatSelect");
-const tileCustomFields = document.getElementById("tileCustomFields");
-
-tileFormatSelect?.addEventListener("change", () => {
-  if (tileCustomFields) {
-    tileCustomFields.style.display = tileFormatSelect.value === "custom" ? "block" : "none";
-  }
-});
 
 // ==========================
 // POKRETANJE

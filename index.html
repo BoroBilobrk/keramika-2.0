@@ -255,12 +255,45 @@
         <label>Format pločica</label>
         <select id="priceFormatSelect">
           <option value="">-- odaberi --</option>
-          <option value="30x60">30 × 60 cm</option>
+          <option value="10x10">10 × 10 cm</option>
+          <option value="15x15">15 × 15 cm</option>
+          <option value="20x20">20 × 20 cm</option>
+          <option value="25x25">25 × 25 cm</option>
+          <option value="30x30">30 × 30 cm</option>
+          <option value="33x33">33 × 33 cm</option>
+          <option value="40x40">40 × 40 cm</option>
+          <option value="45x45">45 × 45 cm</option>
+          <option value="50x50">50 × 50 cm</option>
           <option value="60x60">60 × 60 cm</option>
+          <option value="75x75">75 × 75 cm</option>
+          <option value="80x80">80 × 80 cm</option>
           <option value="90x90">90 × 90 cm</option>
+          <option value="100x100">100 × 100 cm</option>
           <option value="120x120">120 × 120 cm</option>
+          <option value="10x20">10 × 20 cm</option>
+          <option value="10x30">10 × 30 cm</option>
+          <option value="15x30">15 × 30 cm</option>
+          <option value="20x40">20 × 40 cm</option>
+          <option value="20x50">20 × 50 cm</option>
+          <option value="20x60">20 × 60 cm</option>
+          <option value="25x50">25 × 50 cm</option>
+          <option value="30x60">30 × 60 cm</option>
+          <option value="30x90">30 × 90 cm</option>
+          <option value="33x60">33 × 60 cm</option>
+          <option value="40x60">40 × 60 cm</option>
+          <option value="40x80">40 × 80 cm</option>
+          <option value="45x90">45 × 90 cm</option>
+          <option value="50x100">50 × 100 cm</option>
           <option value="60x120">60 × 120 cm</option>
+          <option value="60x180">60 × 180 cm</option>
+          <option value="75x150">75 × 150 cm</option>
+          <option value="80x160">80 × 160 cm</option>
+          <option value="80x240">80 × 240 cm</option>
           <option value="100x300">100 × 300 cm</option>
+          <option value="120x240">120 × 240 cm</option>
+          <option value="120x260">120 × 260 cm</option>
+          <option value="120x278">120 × 278 cm</option>
+          <option value="160x320">160 × 320 cm</option>
           <option value="custom">Prilagođeno</option>
         </select>
       </div>
@@ -343,23 +376,12 @@
       <div id="roomsList"></div>
     </div>
 
-    <!-- FORMAT PLOČICA -->
-    <div class="card">
-      <h3>🧱 Format pločica</h3>
-      <select id="tileFormatSelect">
-        <option value="">-- odaberi --</option>
-        <option value="30x60">30 × 60 cm</option>
-        <option value="60x60">60 × 60 cm</option>
-        <option value="90x90">90 × 90 cm</option>
-        <option value="120x120">120 × 120 cm</option>
-        <option value="60x120">60 × 120 cm</option>
-        <option value="100x300">100 × 300 cm</option>
-        <option value="custom">Prilagođeno</option>
-      </select>
-
-      <div id="tileCustomFields" style="display:none; margin-top:10px;">
-        <input id="tileW" placeholder="Širina pločice (cm)">
-        <input id="tileH" placeholder="Visina pločice (cm)">
+    <!-- FORMAT PLOČICA (hidden, backward compat) -->
+    <div style="display:none;">
+      <select id="tileFormatSelect"></select>
+      <div id="tileCustomFields">
+        <input id="tileW">
+        <input id="tileH">
       </div>
     </div>
 
@@ -409,19 +431,6 @@
       <div id="openingsList"></div>
     </div>
 
-    <!-- STUBIŠTE -->
-    <div class="card">
-      <h3>🪜 Stubište – mjere</h3>
-      <p class="hint">
-        Unesi dužinu jedne stepenice i broj komada. Obračun: dužina × komada.
-      </p>
-
-      <input id="stubeDuzina" placeholder="Dužina jedne stepenice (m), npr. 1,10">
-      <input id="stubeKom" placeholder="Broj stepenica (kom), npr. 12">
-
-      <div id="stubeHint" class="hint" style="margin-top:8px;"></div>
-    </div>
-
     <!-- STAVKE -->
     <div class="card">
       <h3>📋 Stavke</h3>
@@ -430,9 +439,101 @@
         <input type="checkbox" id="chkPod">
         <label for="chkPod">Računaj pod</label>
       </div>
+      <div id="formatPodWrap" style="display:none; margin-left:28px; margin-bottom:8px;">
+        <label>Format pločica (pod):</label>
+        <select id="formatPod">
+          <option value="">-- odaberi --</option>
+          <option value="10x10">10 × 10 cm</option>
+          <option value="15x15">15 × 15 cm</option>
+          <option value="20x20">20 × 20 cm</option>
+          <option value="25x25">25 × 25 cm</option>
+          <option value="30x30">30 × 30 cm</option>
+          <option value="33x33">33 × 33 cm</option>
+          <option value="40x40">40 × 40 cm</option>
+          <option value="45x45">45 × 45 cm</option>
+          <option value="50x50">50 × 50 cm</option>
+          <option value="60x60">60 × 60 cm</option>
+          <option value="75x75">75 × 75 cm</option>
+          <option value="80x80">80 × 80 cm</option>
+          <option value="90x90">90 × 90 cm</option>
+          <option value="100x100">100 × 100 cm</option>
+          <option value="120x120">120 × 120 cm</option>
+          <option value="10x20">10 × 20 cm</option>
+          <option value="10x30">10 × 30 cm</option>
+          <option value="15x30">15 × 30 cm</option>
+          <option value="20x40">20 × 40 cm</option>
+          <option value="20x50">20 × 50 cm</option>
+          <option value="20x60">20 × 60 cm</option>
+          <option value="25x50">25 × 50 cm</option>
+          <option value="30x60">30 × 60 cm</option>
+          <option value="30x90">30 × 90 cm</option>
+          <option value="33x60">33 × 60 cm</option>
+          <option value="40x60">40 × 60 cm</option>
+          <option value="40x80">40 × 80 cm</option>
+          <option value="45x90">45 × 90 cm</option>
+          <option value="50x100">50 × 100 cm</option>
+          <option value="60x120">60 × 120 cm</option>
+          <option value="60x180">60 × 180 cm</option>
+          <option value="75x150">75 × 150 cm</option>
+          <option value="80x160">80 × 160 cm</option>
+          <option value="80x240">80 × 240 cm</option>
+          <option value="100x300">100 × 300 cm</option>
+          <option value="120x240">120 × 240 cm</option>
+          <option value="120x260">120 × 260 cm</option>
+          <option value="120x278">120 × 278 cm</option>
+          <option value="160x320">160 × 320 cm</option>
+          <option value="custom">Prilagođeno</option>
+        </select>
+      </div>
       <div class="checkbox-row">
         <input type="checkbox" id="chkZidovi">
         <label for="chkZidovi">Računaj zidove</label>
+      </div>
+      <div id="formatZidWrap" style="display:none; margin-left:28px; margin-bottom:8px;">
+        <label>Format pločica (zid):</label>
+        <select id="formatZid">
+          <option value="">-- odaberi --</option>
+          <option value="10x10">10 × 10 cm</option>
+          <option value="15x15">15 × 15 cm</option>
+          <option value="20x20">20 × 20 cm</option>
+          <option value="25x25">25 × 25 cm</option>
+          <option value="30x30">30 × 30 cm</option>
+          <option value="33x33">33 × 33 cm</option>
+          <option value="40x40">40 × 40 cm</option>
+          <option value="45x45">45 × 45 cm</option>
+          <option value="50x50">50 × 50 cm</option>
+          <option value="60x60">60 × 60 cm</option>
+          <option value="75x75">75 × 75 cm</option>
+          <option value="80x80">80 × 80 cm</option>
+          <option value="90x90">90 × 90 cm</option>
+          <option value="100x100">100 × 100 cm</option>
+          <option value="120x120">120 × 120 cm</option>
+          <option value="10x20">10 × 20 cm</option>
+          <option value="10x30">10 × 30 cm</option>
+          <option value="15x30">15 × 30 cm</option>
+          <option value="20x40">20 × 40 cm</option>
+          <option value="20x50">20 × 50 cm</option>
+          <option value="20x60">20 × 60 cm</option>
+          <option value="25x50">25 × 50 cm</option>
+          <option value="30x60">30 × 60 cm</option>
+          <option value="30x90">30 × 90 cm</option>
+          <option value="33x60">33 × 60 cm</option>
+          <option value="40x60">40 × 60 cm</option>
+          <option value="40x80">40 × 80 cm</option>
+          <option value="45x90">45 × 90 cm</option>
+          <option value="50x100">50 × 100 cm</option>
+          <option value="60x120">60 × 120 cm</option>
+          <option value="60x180">60 × 180 cm</option>
+          <option value="75x150">75 × 150 cm</option>
+          <option value="80x160">80 × 160 cm</option>
+          <option value="80x240">80 × 240 cm</option>
+          <option value="100x300">100 × 300 cm</option>
+          <option value="120x240">120 × 240 cm</option>
+          <option value="120x260">120 × 260 cm</option>
+          <option value="120x278">120 × 278 cm</option>
+          <option value="160x320">160 × 320 cm</option>
+          <option value="custom">Prilagođeno</option>
+        </select>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="chkHidro">

@@ -155,6 +155,52 @@ export function calculateAuto() {
     result.gerung = bazaLajsne;
   }
 
+  // ====================== 
+  // DODATNE MJERE
+  // ====================== 
+  if (chk("chkDodatne")) {
+    const dmRows = document.querySelectorAll("#dmContainer .dm-row");
+    dmRows.forEach(row => {
+      const dmD = num(row.querySelector(".dmD")?.value);
+      const dmS = num(row.querySelector(".dmS")?.value);
+      const sign = row.querySelector(".dmSign")?.value === "-" ? -1 : 1;
+
+      if (dmD > 0 && dmS > 0) {
+        if (chk("chkPod")) {
+          result.pod += sign * (dmD * dmS);
+        }
+        if (chk("chkZidovi")) {
+          result.zidovi += sign * ((2 * dmD + 2 * dmS) * h);
+        }
+        if (chk("chkSokl")) {
+          result.sokl += sign * (2 * dmD + 2 * dmS);
+        }
+        if (chk("chkHidro")) {
+          result.hidroPod += sign * (dmD * dmS);
+        }
+        if (chk("chkHidroTraka")) {
+          result.hidroTraka += sign * (2 * dmD + 2 * dmS);
+        }
+        if (chk("chkLajsne") && chk("chkZidovi")) {
+          result.lajsne += sign * (2 * h);
+        }
+        if (chk("chkGerung") && chk("chkZidovi")) {
+          result.gerung += sign * (2 * h);
+        }
+      }
+    });
+
+    result.pod = Math.max(0, result.pod);
+    result.zidovi = Math.max(0, result.zidovi);
+    result.sokl = Math.max(0, result.sokl);
+    result.hidroPod = Math.max(0, result.hidroPod);
+    result.hidroTraka = Math.max(0, result.hidroTraka);
+    result.lajsne = Math.max(0, result.lajsne);
+    result.gerung = Math.max(0, result.gerung);
+
+    result.hidroUkupno = result.hidroPod + result.hidroTus;
+  }
+
   const meta = {
     siteName: document.getElementById("siteName")?.value || "",
     roomName: document.getElementById("roomName")?.value || "",
