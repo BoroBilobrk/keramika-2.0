@@ -2,8 +2,9 @@
 import { calculateAuto } from "../calculations/autoCalc.js";
 
 function getItemFormat(itemId) {
+  const escapedId = String(itemId).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const select = document.querySelector(
-    `#troskovnikItemsList select[data-item-id="${String(itemId).replace(/\"/g, "\\\"")}"]`
+    `#troskovnikItemsList select[data-item-id="${escapedId}"]`
   );
 
   return select?.value || "custom";

@@ -1,7 +1,8 @@
 // JS/pdf/pdfBase.js
-import { jsPDF } from "jspdf";
+// Osnovna PDF funkcija - koristi korisnički profil umjesto tvrdo kodiranih podataka
 
 export function createBasePdf(meta) {
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF("p", "mm", "a4");
 
   // Čitanje korisničkih podataka iz localStorage

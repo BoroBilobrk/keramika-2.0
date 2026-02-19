@@ -25,7 +25,7 @@ async function hashPassword(password) {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return 'sha256:' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     } catch (e) {
-      // pad through to fallback
+      // pass through to fallback
     }
   }
   // Fallback za file:// protokol i starije preglednike
