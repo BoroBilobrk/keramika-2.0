@@ -68,3 +68,22 @@ chkStep?.addEventListener("change", () => {
   if (stepInputs)
     stepInputs.style.display = chkStep.checked ? "block" : "none";
 });
+
+// ==========================
+// FORMAT POD / ZID TOGGLE
+// ==========================
+const chkPod = document.getElementById("chkPod");
+const formatPodWrap = document.getElementById("formatPodWrap");
+
+chkPod?.addEventListener("change", () => {
+  if (formatPodWrap)
+    formatPodWrap.style.display = chkPod.checked ? "block" : "none";
+});
+
+const chkZidovi = document.getElementById("chkZidovi");
+const formatZidWrap = document.getElementById("formatZidWrap");
+
+chkZidovi?.addEventListener("change", () => {
+  if (formatZidWrap)
+    formatZidWrap.style.display = chkZidovi.checked ? "block" : "none";
+});
