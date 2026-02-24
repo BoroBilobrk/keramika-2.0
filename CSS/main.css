@@ -401,3 +401,5 @@ button {
 #btnOpenSettings:hover {
   background: #444;
 }
+
+.legacy-stavke-hidden { display: none; }
