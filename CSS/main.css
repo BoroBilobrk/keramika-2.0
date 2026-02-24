@@ -239,15 +239,29 @@ button {
 
 .troskovnik-item {
   display: grid;
-  grid-template-columns: 26px 1fr auto;
+  grid-template-columns: 26px 1fr;
   align-items: start;
-  gap: 10px;
+  gap: 6px 10px;
   padding: 6px 0;
+  border-bottom: 1px solid #222;
 }
 
 .troskovnik-item input[type="checkbox"] {
-  margin-top: 2px;
+  margin-top: 4px;
   transform: scale(1.2);
+}
+
+.troskovnik-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.troskovnik-item-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .troskovnik-item .opis {
@@ -258,6 +272,31 @@ button {
   opacity: 0.7;
   white-space: nowrap;
   font-size: 12px;
+}
+
+.troskovnik-item-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.troskovnik-item-controls select {
+  flex: 1;
+  min-width: 120px;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
+.troskovnik-custom-dims {
+  display: none;
+  gap: 4px;
+}
+
+.troskovnik-custom-dims input {
+  width: 70px;
+  flex: none;
+  font-size: 12px;
+  padding: 4px 6px;
 }
 
 /* ============================= */
