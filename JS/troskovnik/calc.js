@@ -1,12 +1,22 @@
 // JS/troskovnik/calc.js
 import { calculateAuto } from "../calculations/autoCalc.js";
+import { UNIT_PRICES } from "../calculations/cjenik.js";
 
-function getItemFormat(itemId) {
-  const escapedId = String(itemId).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+function getItemCalcMethod(item, id) {
+  if (item.calcMethod) return item.calcMethod;
+  const escapedId = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const select = document.querySelector(
-    `#troskovnikItemsList select[data-item-id="${escapedId}"]`
+    `#troskovnikItemsList select[data-item-id="${escapedId}"][data-role="calc-method"]`
   );
+  return select?.value || "custom";
+}
 
+function getItemTileFormat(item, id) {
+  if (item.tileFormat) return item.tileFormat;
+  const escapedId = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const select = document.querySelector(
+    `#troskovnikItemsList select[data-item-id="${escapedId}"][data-role="tile-format"]`
+  );
   return select?.value || "custom";
 }
 
@@ -20,7 +30,8 @@ export function calcFromTroskovnik() {
   }
 
   // svi izračuni iz automatskog obračuna
-  const auto = calculateAuto();
+  const autoData = calculateAuto();
+  const auto = autoData?.results || {};
 
   const resultCard = document.getElementById("troskovnikResult");
   const resultBox = document.getElementById("troskovnikOutput");
@@ -42,90 +53,56 @@ export function calcFromTroskovnik() {
   let output = [];
 
   checked.forEach(chk => {
-    const id = String(chk.value); // 🔥 KLJUČNO
+    const id = String(chk.value);
     const item = window.troskovnikItems.find(
       i => String(i.id) === id
     );
     if (!item) return;
 
-    let qty = 0;
-    const opis = item.opis.toLowerCase();
-    const format = getItemFormat(id);
+    const method = getItemCalcMethod(item, id);
+    const tileFormat = getItemTileFormat(item, id);
 
     // ==========================
-    // MAPIRANJE NA AUTO CALC
+    // MAPIRANJE METODE NA KOLICINU
     // ==========================
+    const methodToQty = {
+      pod:         auto.pod         || 0,
+      zidovi:      auto.zidovi      || 0,
+      hidroPod:    auto.hidroPod    || 0,
+      hidroTus:    auto.hidroTus    || 0,
+      hidroUkupno: auto.hidroUkupno || 0,
+      hidroTraka:  auto.hidroTraka  || 0,
+      silikon:     auto.silikon     || 0,
+      sokl:        auto.sokl        || 0,
+      lajsne:      auto.lajsne      || 0,
+      gerung:      auto.gerung      || 0,
+      stepenice:   auto.stepenice   || 0,
+      custom:      0,
+    };
 
-    // PODOVI – m2
-    if (
-      opis.includes("kupaonice") ||
-      opis.includes("wc") ||
-      opis.includes("kuhinja") ||
-      opis.includes("loggia") ||
-      opis.includes("pod hodnika") ||
-      opis.includes("pod lifta")
-    ) {
-      qty = auto.pod || 0;
+    const qty = methodToQty[method] ?? 0;
+
+    // ==========================
+    // CIJENA – iz troškovnika; fallback UNIT_PRICES
+    // ==========================
+    let unitPrice = 0;
+    if (item.cijena != null && item.cijena > 0) {
+      unitPrice = item.cijena;
+    } else if (item.ukupno != null && item.kolicina != null && item.kolicina > 0) {
+      unitPrice = item.ukupno / item.kolicina;
+    } else {
+      unitPrice = UNIT_PRICES[method] || 0;
     }
 
-    // ZIDOVI – m2
-    else if (opis.includes("zid")) {
-      qty = auto.zidovi || 0;
-    }
-
-    // HIDROIZOLACIJA / IMPREGNACIJA – m2
-    else if (
-      opis.includes("hidroizolacije") ||
-      opis.includes("impregnacije")
-    ) {
-      qty = auto.hidroUkupno || 0;
-    }
-
-    // HIDRO TRAKA – m'
-    else if (opis.includes("trake")) {
-      qty = auto.hidroTraka || 0;
-    }
-
-    // SILIKON – m'
-    else if (opis.includes("silikona")) {
-      qty = auto.silikon || 0;
-    }
-
-    // SOKL – m'
-    else if (opis.includes("sokl")) {
-      qty = auto.sokl || 0;
-    }
-
-    // LAJSNE – m'
-    else if (opis.includes("lajsne")) {
-      qty = auto.lajsne || 0;
-    }
-
-    // GERUNG – m'
-    else if (opis.includes("gerung")) {
-      qty = auto.gerung || 0;
-    }
-
-    // STEPENICE – kom / m'
-    else if (opis.includes("stepenice")) {
-      qty = auto.stepenice || 0;
-    }
-
-    // REŽIJSKI SATI (ako kasnije dodaš)
-    else if (opis.includes("režijski")) {
-      qty = auto.sati || 0;
-    }
-
-    // FALLBACK
-    else {
-      qty = 0;
-    }
+    const total = qty * unitPrice;
 
     output.push({
       opis: item.opis,
       jm: item.jm,
       qty,
-      format
+      unitPrice,
+      total,
+      tileFormat,
     });
   });
 
@@ -134,12 +111,37 @@ export function calcFromTroskovnik() {
   // ==========================
   resultCard.style.display = "block";
 
+  const totalSum = output.reduce((s, o) => s + o.total, 0);
+
   resultBox.innerHTML = `
-    <ul>
-      ${output
-        .map(o => `<li><b>${o.qty}</b> ${o.jm} – ${o.opis}${o.format ? ` (${o.format})` : ""}</li>`)
-        .join("")}
-    </ul>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Stavka</th>
+          <th>JM</th>
+          <th>Kol.</th>
+          <th>Jed. cijena</th>
+          <th>Ukupno</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${output.map(o => `
+          <tr>
+            <td>${o.opis}</td>
+            <td>${o.jm}</td>
+            <td>${o.qty.toFixed(2)}</td>
+            <td>${o.unitPrice.toFixed(2)}</td>
+            <td>${o.total.toFixed(2)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4"><b>UKUPNO</b></td>
+          <td><b>${totalSum.toFixed(2)}</b></td>
+        </tr>
+      </tfoot>
+    </table>
   `;
 
   console.log("✅ Rezultat:", output);

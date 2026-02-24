@@ -31,6 +31,21 @@ function getPricesKey() {
   return user ? `keramika_prices_${user}` : 'keramika_prices';
 }
 
+const CALC_METHOD_OPTIONS = [
+  { value: "custom",      label: "Custom (ručno)" },
+  { value: "pod",         label: "Pod (m²)" },
+  { value: "zidovi",      label: "Zidovi (m²)" },
+  { value: "hidroPod",    label: "Hidro pod (m²)" },
+  { value: "hidroTus",    label: "Hidro tuš (m²)" },
+  { value: "hidroUkupno", label: "Hidro ukupno (m²)" },
+  { value: "hidroTraka",  label: "Hidro traka (m')" },
+  { value: "silikon",     label: "Silikon (m')" },
+  { value: "sokl",        label: "Sokl (m')" },
+  { value: "lajsne",      label: "Lajsne (m')" },
+  { value: "gerung",      label: "Gerung (m')" },
+  { value: "stepenice",   label: "Stepenice (m')" },
+];
+
 const TILE_FORMAT_OPTIONS = [
   { value: "", label: "-- odaberi --" },
   { value: "10x10", label: "10 × 10 cm" },
@@ -75,6 +90,45 @@ const TILE_FORMAT_OPTIONS = [
   { value: "custom", label: "Prilagođeno" }
 ];
 
+function guessCalcMethodFromOpis(opis) {
+  const o = (opis || "").toLowerCase();
+  const podKeywords = ["pod", "kupaonice", "wc", "kuhinja", "loggia", "hodnika", "lifta"];
+  if (podKeywords.some(kw => o.includes(kw))) return "pod";
+  if (o.includes("zid")) return "zidovi";
+  if (o.includes("hidroizolacije") || o.includes("impregnacije")) return "hidroUkupno";
+  if (o.includes("trake")) return "hidroTraka";
+  if (o.includes("silikona")) return "silikon";
+  if (o.includes("sokl")) return "sokl";
+  if (o.includes("lajsne")) return "lajsne";
+  if (o.includes("gerung")) return "gerung";
+  if (o.includes("stepenice")) return "stepenice";
+  return "custom";
+}
+
+function initTroskovnikItemDefaults(items) {
+  (items || []).forEach(i => {
+    if (!i.calcMethod) i.calcMethod = guessCalcMethodFromOpis(i.opis || "");
+    if (!i.tileFormat) i.tileFormat = "custom";
+  });
+}
+
+function buildCalcMethodSelect(selectedValue = "custom", itemId = "") {
+  const select = document.createElement("select");
+  select.className = "troskovnik-calcmethod-select";
+  select.dataset.itemId = String(itemId);
+  select.dataset.role = "calc-method";
+
+  CALC_METHOD_OPTIONS.forEach(optionData => {
+    const option = document.createElement("option");
+    option.value = optionData.value;
+    option.textContent = optionData.label;
+    if (optionData.value === selectedValue) option.selected = true;
+    select.appendChild(option);
+  });
+
+  return select;
+}
+
 function buildFormatSelect(selectedValue = "") {
   const select = document.createElement("select");
   select.className = "troskovnik-format-select";
@@ -102,15 +156,22 @@ function mountSharedCalcFields(targetId) {
   shared.style.display = "block";
 }
 
+function setAddRoomBtnLabel(label) {
+  const btn = document.getElementById("btnAddRoomToSite");
+  if (btn) btn.textContent = label;
+}
+
 function initSharedCalcFieldsMounts() {
   mountSharedCalcFields("sharedCalcFieldsMount");
 
   document.getElementById("btnOpenAutoCalc")?.addEventListener("click", () => {
     mountSharedCalcFields("sharedCalcFieldsMount");
+    setAddRoomBtnLabel("➕ Dodaj / ažuriraj ovu prostoriju");
   });
 
   document.getElementById("btnOpenTroskovnikCalc")?.addEventListener("click", () => {
     mountSharedCalcFields("troskovnikCalcFieldsMount");
+    setAddRoomBtnLabel("✏️ Ažuriraj ovu stavku");
   });
 }
 
@@ -380,6 +441,7 @@ document.getElementById("btnLoadTroskovnik")?.addEventListener("click", async ()
 
   try {
     await loadTroskovnikExcel(file);
+    initTroskovnikItemDefaults(window.troskovnikItems);
     renderTroskovnikChecklist();
     alert("Excel troškovnik učitan ✔");
   } catch (e) {
@@ -412,10 +474,19 @@ function renderTroskovnikChecklist() {
     const row = document.createElement("div");
     row.className = "troskovnik-item";
 
+    // Checkbox
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = String(i.id ?? "");
     checkbox.checked = true;
+
+    // Content wrapper
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "troskovnik-item-content";
+
+    // Header: opis + jm
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "troskovnik-item-header";
 
     const opisDiv = document.createElement("div");
     opisDiv.className = "opis";
@@ -425,22 +496,61 @@ function renderTroskovnikChecklist() {
     jmDiv.className = "jm";
     jmDiv.textContent = `(${i.jm || ""})`;
 
-    const formatDiv = document.createElement("div");
-    formatDiv.className = "format";
+    headerDiv.appendChild(opisDiv);
+    headerDiv.appendChild(jmDiv);
 
-    const formatValue = i.format || "custom";
-    const formatSelect = buildFormatSelect(formatValue);
-    formatSelect.dataset.itemId = String(i.id ?? "");
-    formatSelect.addEventListener("change", () => {
-      i.format = formatSelect.value;
+    // Controls: calcMethod + tileFormat + custom dims
+    const controlsDiv = document.createElement("div");
+    controlsDiv.className = "troskovnik-item-controls";
+
+    // Način računanja
+    const calcMethodSelect = buildCalcMethodSelect(i.calcMethod, i.id);
+    calcMethodSelect.addEventListener("change", () => {
+      i.calcMethod = calcMethodSelect.value;
     });
 
-    formatDiv.appendChild(formatSelect);
+    // Format pločica
+    const formatSelect = buildFormatSelect(i.tileFormat);
+    formatSelect.dataset.itemId = String(i.id ?? "");
+    formatSelect.dataset.role = "tile-format";
+    formatSelect.className = "troskovnik-format-select";
+
+    // Custom W/H inputs
+    const customWrap = document.createElement("div");
+    customWrap.className = "troskovnik-custom-dims";
+    customWrap.style.display = i.tileFormat === "custom" ? "flex" : "none";
+
+    const wInput = document.createElement("input");
+    wInput.type = "number";
+    wInput.placeholder = "W (cm)";
+    wInput.className = "tile-w-input";
+    wInput.value = i.tileWcm ?? "";
+    wInput.addEventListener("change", () => { i.tileWcm = parseFloat(wInput.value) || null; });
+
+    const hInput = document.createElement("input");
+    hInput.type = "number";
+    hInput.placeholder = "H (cm)";
+    hInput.className = "tile-h-input";
+    hInput.value = i.tileHcm ?? "";
+    hInput.addEventListener("change", () => { i.tileHcm = parseFloat(hInput.value) || null; });
+
+    customWrap.appendChild(wInput);
+    customWrap.appendChild(hInput);
+
+    formatSelect.addEventListener("change", () => {
+      i.tileFormat = formatSelect.value;
+      customWrap.style.display = formatSelect.value === "custom" ? "flex" : "none";
+    });
+
+    controlsDiv.appendChild(calcMethodSelect);
+    controlsDiv.appendChild(formatSelect);
+    controlsDiv.appendChild(customWrap);
+
+    contentDiv.appendChild(headerDiv);
+    contentDiv.appendChild(controlsDiv);
 
     row.appendChild(checkbox);
-    row.appendChild(opisDiv);
-    row.appendChild(jmDiv);
-    row.appendChild(formatDiv);
+    row.appendChild(contentDiv);
 
     box.appendChild(row);
   });
