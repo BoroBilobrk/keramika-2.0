@@ -154,6 +154,11 @@ function mountSharedCalcFields(targetId) {
 
   mount.appendChild(shared);
   shared.style.display = "block";
+
+  const stavkeCard = shared.querySelector(".legacy-stavke-hidden");
+  if (stavkeCard) {
+    stavkeCard.style.display = targetId === "sharedCalcFieldsMount" ? "block" : "none";
+  }
 }
 
 function setAddRoomBtnLabel(label) {
